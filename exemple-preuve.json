@@ -1,0 +1,111 @@
+{
+  "algoVersion": "pf-v1",
+  "_lisezMoi": "Exemple issu des vecteurs de référence figés de LeBooster (cas « anti-malchance déclenchée »). Remplace-le par ta propre preuve, téléchargée depuis le détail de ton ouverture.",
+  "proof": {
+    "commit": "9f72ea0cf49536e3c66c787f705186df9a4378083753ae9536d65b3ad7fcddc4",
+    "serverSeed": "2222222222222222222222222222222222222222222222222222222222222222",
+    "clientSeed": "lebooster-kat-pity",
+    "nonce": 15,
+    "draw": "d5a2d09f99481f292a49a74032580b3f19b0d04d9aacba6840773a5a60817c53"
+  },
+  "snapshots": {
+    "packRules": {
+      "slots": [
+        {
+          "index": 0,
+          "label": "only",
+          "odds": [
+            {
+              "rarity": "Common",
+              "weight": 10000
+            }
+          ]
+        }
+      ],
+      "pools": {
+        "Common": ["c1", "c2", "c3"],
+        "Ultra Rare": ["ur1", "ur2", "ur3"]
+      },
+      "rankBareme": [
+        {
+          "rank": 1,
+          "aliases": ["Common", "Commune"]
+        },
+        {
+          "rank": 2,
+          "aliases": ["Uncommon", "Peu Commune"]
+        },
+        {
+          "rank": 3,
+          "aliases": [
+            "Rare",
+            "Rare Holo",
+            "Holo Rare",
+            "Rare Holo V",
+            "Rare Holo EX",
+            "Rare Holo GX"
+          ]
+        },
+        {
+          "rank": 4,
+          "aliases": [
+            "Double Rare",
+            "Double rare",
+            "Radiant Rare",
+            "Chromatique",
+            "Rare Chromatique",
+            "Amazing Rare",
+            "Magnifique",
+            "Rare Magnifique"
+          ]
+        },
+        {
+          "rank": 5,
+          "aliases": ["Ultra Rare", "Rare Ultra", "Rare Holo VMAX", "Rare Holo VSTAR"]
+        },
+        {
+          "rank": 6,
+          "aliases": ["Illustration Rare", "Illustration rare", "Rare Illustration", "IR"]
+        },
+        {
+          "rank": 7,
+          "aliases": [
+            "Special Illustration Rare",
+            "Special illustration rare",
+            "Rare Illustration spéciale",
+            "SIR",
+            "SAR",
+            "Hyper Rare",
+            "Hyper rare",
+            "Rare Hyper"
+          ]
+        },
+        {
+          "rank": 8,
+          "aliases": [
+            "Secret Rare",
+            "Rare Secret",
+            "Rainbow Rare",
+            "Rare Rainbow",
+            "Arc-en-ciel",
+            "Rare Arc-en-ciel",
+            "ACE SPEC Rare",
+            "Rare ACE SPEC"
+          ]
+        }
+      ]
+    },
+    "pity": {
+      "counter": 14,
+      "threshold": 15,
+      "guaranteedRarity": "Ultra Rare"
+    }
+  },
+  "cards": [
+    {
+      "slot": 0,
+      "rarity": "Ultra Rare",
+      "cardId": "ur1"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "name": "@lebooster/verifier",
+  "version": "1.0.0",
+  "description": "Vérificateur indépendant des tirages LeBooster (provably-fair, algo pf-v1). Sans dépendance.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "verify-lebooster": "./verify-lebooster.mjs"
+  },
+  "main": "./verify-lebooster.mjs",
+  "files": [
+    "verify-lebooster.mjs",
+    "kat.json",
+    "exemple-preuve.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node verify-lebooster.mjs --self-test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LeBooster/provably-fair-verifier.git"
+  },
+  "homepage": "https://lebooster.fr/verify",
+  "bugs": {
+    "url": "https://github.com/LeBooster/provably-fair-verifier/issues"
+  },
+  "keywords": [
+    "provably-fair",
+    "verifier",
+    "lebooster",
+    "pokemon",
+    "tcg",
+    "transparency"
+  ]
+}
