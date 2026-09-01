@@ -659,5 +659,293 @@
         "evaluatedSlotIndex": 2
       }
     }
+  },
+  {
+    "name": "replacement-collision",
+    "description": "pf-v2 : deux slots d’un même palier peuvent rendre la même carte (l’inverse de rarity-collision).",
+    "algoVersion": "pf-v2",
+    "input": {
+      "serverSeedHex": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "clientSeed": "seed-wr",
+      "nonce": 1,
+      "packRules": {
+        "slots": [
+          {
+            "index": 0,
+            "odds": [
+              {
+                "rarity": "Common",
+                "weight": 10000
+              }
+            ]
+          },
+          {
+            "index": 1,
+            "odds": [
+              {
+                "rarity": "Common",
+                "weight": 10000
+              }
+            ]
+          },
+          {
+            "index": 2,
+            "odds": [
+              {
+                "rarity": "Common",
+                "weight": 10000
+              }
+            ]
+          }
+        ],
+        "pools": {
+          "Common": ["c1", "c2"]
+        },
+        "rankBareme": [
+          {
+            "rank": 1,
+            "aliases": ["Common", "Commune"]
+          },
+          {
+            "rank": 2,
+            "aliases": ["Uncommon", "Peu Commune"]
+          },
+          {
+            "rank": 3,
+            "aliases": [
+              "Rare",
+              "Rare Holo",
+              "Holo Rare",
+              "Rare Holo V",
+              "Rare Holo EX",
+              "Rare Holo GX"
+            ]
+          },
+          {
+            "rank": 4,
+            "aliases": [
+              "Double Rare",
+              "Double rare",
+              "Radiant Rare",
+              "Chromatique",
+              "Rare Chromatique",
+              "Amazing Rare",
+              "Magnifique",
+              "Rare Magnifique"
+            ]
+          },
+          {
+            "rank": 5,
+            "aliases": ["Ultra Rare", "Rare Ultra", "Rare Holo VMAX", "Rare Holo VSTAR"]
+          },
+          {
+            "rank": 6,
+            "aliases": ["Illustration Rare", "Illustration rare", "Rare Illustration", "IR"]
+          },
+          {
+            "rank": 7,
+            "aliases": [
+              "Special Illustration Rare",
+              "Special illustration rare",
+              "Rare Illustration spéciale",
+              "SIR",
+              "SAR",
+              "Hyper Rare",
+              "Hyper rare",
+              "Rare Hyper"
+            ]
+          },
+          {
+            "rank": 8,
+            "aliases": [
+              "Secret Rare",
+              "Rare Secret",
+              "Rainbow Rare",
+              "Rare Rainbow",
+              "Arc-en-ciel",
+              "Rare Arc-en-ciel",
+              "ACE SPEC Rare",
+              "Rare ACE SPEC"
+            ]
+          }
+        ]
+      },
+      "pity": {
+        "counter": 0,
+        "threshold": 0,
+        "guaranteedRarity": ""
+      }
+    },
+    "expected": {
+      "commit": "e0e77a507412b120f6ede61f62295b1a7b2ff19d3dcc8f7253e51663470c888e",
+      "draw": "c8acb6b9fae9f19e253d243349c4602ab4d0099cca92fc86a2195744bccb3eaf",
+      "cards": [
+        {
+          "slot": 0,
+          "rarity": "Common",
+          "cardId": "c2"
+        },
+        {
+          "slot": 1,
+          "rarity": "Common",
+          "cardId": "c1"
+        },
+        {
+          "slot": 2,
+          "rarity": "Common",
+          "cardId": "c1"
+        }
+      ],
+      "pity": {
+        "counterBefore": 0,
+        "counterAfter": 0,
+        "applied": false,
+        "evaluatedSlotIndex": 2
+      }
+    }
+  },
+  {
+    "name": "single-card-tier",
+    "description": "pf-v2 : un palier d’une seule carte est tirable et remplit toute l’ouverture.",
+    "algoVersion": "pf-v2",
+    "input": {
+      "serverSeedHex": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "clientSeed": "seed-one",
+      "nonce": 2,
+      "packRules": {
+        "slots": [
+          {
+            "index": 0,
+            "odds": [
+              {
+                "rarity": "Common",
+                "weight": 10000
+              }
+            ]
+          },
+          {
+            "index": 1,
+            "odds": [
+              {
+                "rarity": "Common",
+                "weight": 10000
+              }
+            ]
+          },
+          {
+            "index": 2,
+            "odds": [
+              {
+                "rarity": "Common",
+                "weight": 10000
+              }
+            ]
+          }
+        ],
+        "pools": {
+          "Common": ["only"]
+        },
+        "rankBareme": [
+          {
+            "rank": 1,
+            "aliases": ["Common", "Commune"]
+          },
+          {
+            "rank": 2,
+            "aliases": ["Uncommon", "Peu Commune"]
+          },
+          {
+            "rank": 3,
+            "aliases": [
+              "Rare",
+              "Rare Holo",
+              "Holo Rare",
+              "Rare Holo V",
+              "Rare Holo EX",
+              "Rare Holo GX"
+            ]
+          },
+          {
+            "rank": 4,
+            "aliases": [
+              "Double Rare",
+              "Double rare",
+              "Radiant Rare",
+              "Chromatique",
+              "Rare Chromatique",
+              "Amazing Rare",
+              "Magnifique",
+              "Rare Magnifique"
+            ]
+          },
+          {
+            "rank": 5,
+            "aliases": ["Ultra Rare", "Rare Ultra", "Rare Holo VMAX", "Rare Holo VSTAR"]
+          },
+          {
+            "rank": 6,
+            "aliases": ["Illustration Rare", "Illustration rare", "Rare Illustration", "IR"]
+          },
+          {
+            "rank": 7,
+            "aliases": [
+              "Special Illustration Rare",
+              "Special illustration rare",
+              "Rare Illustration spéciale",
+              "SIR",
+              "SAR",
+              "Hyper Rare",
+              "Hyper rare",
+              "Rare Hyper"
+            ]
+          },
+          {
+            "rank": 8,
+            "aliases": [
+              "Secret Rare",
+              "Rare Secret",
+              "Rainbow Rare",
+              "Rare Rainbow",
+              "Arc-en-ciel",
+              "Rare Arc-en-ciel",
+              "ACE SPEC Rare",
+              "Rare ACE SPEC"
+            ]
+          }
+        ]
+      },
+      "pity": {
+        "counter": 0,
+        "threshold": 0,
+        "guaranteedRarity": ""
+      }
+    },
+    "expected": {
+      "commit": "4ca14526b2751b640d549ce7caf8ac39438592211a0ec370064d57666a682ad6",
+      "draw": "4564eab35942f20ffd3697e9c098dda6dc1d4240af9babb3a1cf2e18536190f6",
+      "cards": [
+        {
+          "slot": 0,
+          "rarity": "Common",
+          "cardId": "only"
+        },
+        {
+          "slot": 1,
+          "rarity": "Common",
+          "cardId": "only"
+        },
+        {
+          "slot": 2,
+          "rarity": "Common",
+          "cardId": "only"
+        }
+      ],
+      "pity": {
+        "counterBefore": 0,
+        "counterAfter": 0,
+        "applied": false,
+        "evaluatedSlotIndex": 2
+      }
+    }
   }
 ]

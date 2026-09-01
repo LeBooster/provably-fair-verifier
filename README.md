@@ -22,7 +22,7 @@ est valide, `1` sinon.
 Pour essayer tout de suite sans compte, un exemple est fourni :
 
 ```bash
-node verify-lebooster.mjs exemple-preuve.json
+node verify-lebooster.mjs example-proof.json
 ```
 
 ## Les trois choses que ce programme vérifie
@@ -43,7 +43,7 @@ figé. Toutes les valeurs intermédiaires sont affichées.
 
 ## L'algorithme, en détail
 
-Version : `pf-v1`. Tout ce qui suit fait partie du contrat de vérification : une seule de ces valeurs
+Versions rejouables : `pf-v1` et `pf-v2`. Tout ce qui suit fait partie du contrat de vérification : une seule de ces valeurs
 qui change impose une nouvelle version d'algorithme.
 
 ### Primitives
@@ -75,9 +75,11 @@ d'affichage. Pour le slot en position d'évaluation `p` :
    `limite = floor(2^32 / n) × n`, puis pour `i = 0, 1, 2…` on tire `v = u32(stream(draw, "card:p", i))`
    jusqu'à `v < limite`, et l'index vaut `v mod n`. Ce rejet supprime le biais du modulo quand
    `2^32` n'est pas divisible par `n`. Chaque rejet consomme un `i` et reste donc reproductible.
-4. **Sans remise.** La carte choisie est retirée du pool avec un décalage (jamais un échange avec la
-   dernière), pour que les index suivants soient reproductibles et qu'une même carte ne sorte pas
-   deux fois dans une ouverture.
+4. **Avec ou sans remise, selon la version.** En `pf-v2` la carte choisie reste dans le pool : une
+   même carte peut sortir plusieurs fois dans une ouverture. En `pf-v1` elle en était retirée avec
+   un décalage (jamais un échange avec la dernière), de sorte qu'une carte ne sortait qu'une fois.
+   La borne de rejet se calcule sur la taille du pool lu, donc les deux versions divergent dès le
+   deuxième slot d'un même palier : une preuve se rejoue toujours avec **sa** version.
 
 ### Le pool figé
 
@@ -130,11 +132,9 @@ Rejoue cinq vecteurs de référence figés (`kat.json`) qui couvrent le cas nomi
 raretés, un déclenchement d'anti-malchance, un rejet d'échantillonnage et un ordre d'affichage
 différent de l'ordre d'évaluation. Ces vecteurs sont les mêmes que ceux du moteur de production.
 
-Ils servent aussi de garde-fou de notre côté : dans le dépôt privé où vit le moteur de tirage, un
-test d'intégration continue exécute **ce fichier même** sur ces vecteurs et compare chaque valeur
-intermédiaire à celles du moteur qui tire réellement les cartes. Modifier l'algorithme sans reporter
-la modification ici casse notre CI, ce qui est le seul mécanisme qui garantisse que le vérificateur
-publié ici vérifie toujours le bon algorithme.
+Ils servent aussi de garde-fou de notre côté : un test du dépôt LeBooster exécute **ce fichier même**
+sur ces vecteurs et compare chaque valeur intermédiaire à celles du moteur qui tire réellement les
+cartes. Modifier l'algorithme sans reporter la modification ici casse notre intégration continue.
 
 ## Ce que ce programme ne prouve pas
 
@@ -147,12 +147,6 @@ Il ne dit pas non plus que ta graine client a été tirée au hasard — c'est t
 génère, et tu peux la remplacer par ce que tu veux avant d'ouvrir. C'est précisément ce qui rend le
 schéma solide : nous ne pouvons pas la deviner au moment de nous engager.
 
-## Signaler un problème
-
-Si le vérificateur échoue sur une preuve que tu juges valide, ou si tu penses avoir trouvé un écart
-entre ce code et ce que fait réellement le site, ouvre une issue sur ce dépôt. Une preuve qui ne
-passe pas est exactement ce que nous voulons savoir.
-
 ## Licence
 
-MIT — voir [LICENSE](./LICENSE).
+MIT.

@@ -1,23 +1,23 @@
 #!/usr/bin/env node
 /**
- * Vérificateur indépendant des tirages LeBooster — algo_version = "pf-v1".
+ * Independent verifier of LeBooster draws. Replays pf-v1 and pf-v2.
  *
- * Un seul fichier, aucune dépendance : uniquement `node:crypto`, qui fournit
- * SHA-256 et HMAC-SHA-256. Tu peux le lire en entier avant de l'exécuter, c'est
- * le but. Le programme ne contacte aucun serveur et n'écrit rien : il lit un
- * fichier de preuve, refait le calcul, et affiche chaque étape.
+ * One single file, no dependency: only `node:crypto`, which provides SHA-256 and
+ * HMAC-SHA-256. It can be read in full before being run, that is the point. The
+ * program contacts no server and writes nothing: it reads a proof file, redoes the
+ * computation, and prints every step.
  *
  * Usage :
  *   node verify-lebooster.mjs preuve.json
  *   node verify-lebooster.mjs preuve.json --json     (sortie machine)
  *   node verify-lebooster.mjs --self-test            (vecteurs de référence)
  *
- * Code de sortie : 0 si la preuve est valide, 1 sinon.
+ * Exit code: 0 if the proof is valid, 1 otherwise.
  *
- * Ce fichier est la transcription littérale de l'algorithme de production
- * (`packages/shared/src/provably-fair` dans le dépôt LeBooster). Un test du
- * dépôt rejoue les vecteurs de `kat.json` à travers CE fichier et compare au
- * moteur de production : les deux ne peuvent pas diverger sans casser la CI.
+ * This file is the literal transcription of the production algorithm
+ * (`packages/shared/src/provably-fair` in the LeBooster repository). A test of the
+ * repository replays the `kat.json` vectors through THIS file and compares against
+ * the production engine: the two cannot diverge without breaking CI.
  */
 
 import { createHash, createHmac } from 'node:crypto';
@@ -29,35 +29,35 @@ import { dirname, join } from 'node:path';
 // 1. Primitives cryptographiques (PF §2.2, §2.3)
 // ---------------------------------------------------------------------------
 
-/** 2^32, borne du tirage d'un entier 32 bits. */
+/** 2^32, upper bound of a 32-bit integer draw. */
 const MAX_U32 = 4294967296;
 
 const hexToBytes = (hex) => Buffer.from(hex, 'hex');
 const bytesToHex = (bytes) => Buffer.from(bytes).toString('hex');
 
-/** commit = hex(SHA-256(server_seed)) — l'engagement publié AVANT l'ouverture. */
+/** commit = hex(SHA-256(server_seed)), the commitment published BEFORE the opening. */
 const computeCommit = (serverSeedHex) =>
   createHash('sha256').update(hexToBytes(serverSeedHex)).digest('hex');
 
 /**
- * draw = HMAC-SHA-256(clé = server_seed, message = "client_seed:nonce").
+ * draw = HMAC-SHA-256(key = server_seed, message = "client_seed:nonce").
  *
- * La clé est la graine serveur DÉCODÉE depuis l'hexadécimal (octets bruts). La
- * graine client est une chaîne opaque utilisée telle quelle, jamais ré-encodée.
- * Le nonce est sérialisé en décimal, séparé par « : ».
+ * The key is the server seed DECODED from hexadecimal (raw bytes). The client seed
+ * is an opaque string used as-is, never re-encoded. The nonce is serialized in
+ * decimal, separated by a colon.
  */
 const computeDraw = (serverSeedHex, clientSeed, nonce) =>
   createHmac('sha256', hexToBytes(serverSeedHex)).update(`${clientSeed}:${nonce}`, 'utf8').digest();
 
 /**
- * Ré-expansion déterministe du tirage en flux indépendants :
- * stream(draw, label, i) = HMAC-SHA-256(clé = draw, message = "label:i").
- * Le digest du tirage sert de clé ; `label` et `i` séparent les usages.
+ * Deterministic re-expansion of the draw into independent streams:
+ * stream(draw, label, i) = HMAC-SHA-256(key = draw, message = "label:i").
+ * The draw digest acts as the key; `label` and `i` separate the usages.
  */
 const streamBytes = (draw, label, i) =>
   createHmac('sha256', draw).update(`${label}:${i}`, 'utf8').digest();
 
-/** Entier 32 bits non signé, gros-boutiste, lu à l'offset donné. */
+/** Unsigned 32-bit integer, big-endian, read at the given offset. */
 const u32BE = (bytes, offset = 0) =>
   ((bytes[offset] << 24) |
     (bytes[offset + 1] << 16) |
@@ -65,10 +65,10 @@ const u32BE = (bytes, offset = 0) =>
     bytes[offset + 3]) >>>
   0;
 
-/** Les 32 premiers bits ramenés dans [0, 1). */
+/** The first 32 bits mapped into [0, 1). */
 const float01 = (bytes, offset = 0) => u32BE(bytes, offset) / MAX_U32;
 
-/** hex(SHA-256(sérialisation canonique du pool figé)) — clés de rareté triées. */
+/** hex(SHA-256(canonical serialization of the frozen pool)), rarity keys sorted. */
 const poolDigest = (pools) => {
   const canonical = {};
   for (const rarity of Object.keys(pools).sort()) canonical[rarity] = pools[rarity];
@@ -76,10 +76,10 @@ const poolDigest = (pools) => {
 };
 
 // ---------------------------------------------------------------------------
-// 2. Barème des raretés (PF-BARÈME)
+// 2. Rarity scale (PF-BAREME)
 // ---------------------------------------------------------------------------
 
-/** NFD → suppression des diacritiques → minuscules → espaces compactés. */
+/** NFD -> diacritics stripped -> lowercase -> whitespace collapsed. */
 const normalizeRarity = (rarity) =>
   rarity
     .normalize('NFD')
@@ -88,10 +88,10 @@ const normalizeRarity = (rarity) =>
     .replace(/\s+/g, ' ')
     .trim();
 
-/** alias normalisé → rang. Une rareté inconnue vaut 0. */
-const buildRankLookup = (bareme) => {
+/** Normalized alias -> rank. An unknown rarity is worth 0. */
+const buildRankLookup = (rarityScale) => {
   const lookup = new Map();
-  for (const entry of bareme) {
+  for (const entry of rarityScale) {
     for (const alias of entry.aliases) lookup.set(normalizeRarity(alias), entry.rank);
   }
   return lookup;
@@ -104,9 +104,9 @@ const rankOf = (rarity, lookup) => lookup.get(normalizeRarity(rarity)) ?? 0;
 // ---------------------------------------------------------------------------
 
 /**
- * Évaluée une seule fois par ouverture, sur le slot d'index le plus élevé.
- * Ne dégrade jamais une rareté : elle remet le compteur à zéro quand le tirage
- * naturel atteint déjà la garantie, ou force la bande garantie au seuil.
+ * Evaluated once per opening, on the highest-index slot.
+ * It never downgrades a rarity: it resets the counter when the natural draw already
+ * reaches the guarantee, or forces the guaranteed band at the threshold.
  */
 const applyPity = (drawnRarity, pity, isPitySlot, lookup) => {
   if (!isPitySlot) return { rarity: drawnRarity, counterAfter: pity.counter, triggered: false };
@@ -122,10 +122,13 @@ const applyPity = (drawnRarity, pity, isPitySlot, lookup) => {
 };
 
 // ---------------------------------------------------------------------------
-// 4. Rejeu complet, étape par étape (PF §6.4)
+// 4. Full replay, step by step (PF §6.4)
 // ---------------------------------------------------------------------------
 
-/** Au-delà, on considère l'échantillonnage cassé plutôt que de boucler sans fin. */
+/** Beyond that, we consider the sampling broken rather than looping forever. */
+/** Versions que ce script sait rejouer. Rien ne doit en sortir : les tirages passés en dépendent. */
+const SUPPORTED_ALGO_VERSIONS = ['pf-v1', 'pf-v2'];
+
 const MAX_REJECTION_ATTEMPTS = 32;
 
 function explain(proof, snapshots, claimedCards) {
@@ -162,11 +165,15 @@ function explain(proof, snapshots, claimedCards) {
   }
 
   const lookup = buildRankLookup(packRules.rankBareme);
+  // pf-v1 tire sans remise et consomme le pool ; pf-v2 tire avec remise et lit le pool figé.
+  // Une preuve sans version est une preuve d'avant le versionnement, donc pf-v1.
+  const withReplacement = (proof.algoVersion ?? 'pf-v1') === 'pf-v2';
   const remaining = {};
-  for (const rarity of Object.keys(packRules.pools))
-    remaining[rarity] = [...packRules.pools[rarity]];
+  if (!withReplacement)
+    for (const rarity of Object.keys(packRules.pools))
+      remaining[rarity] = [...packRules.pools[rarity]];
 
-  // L'ordre d'ÉVALUATION est slot.index croissant, distinct de l'ordre d'affichage.
+  // The EVALUATION order is ascending slot.index, distinct from the display order.
   const slots = [...packRules.slots].sort((a, b) => a.index - b.index);
   if (new Set(slots.map((s) => s.index)).size !== slots.length) {
     throw new Error('les slot.index doivent être uniques (PF-07)');
@@ -176,12 +183,12 @@ function explain(proof, snapshots, claimedCards) {
   let mappingMatches = (claimedCards ?? []).length === slots.length;
 
   slots.forEach((slot, evalPos) => {
-    // 4.1 — Sous-flux de rareté : stream(draw, "rarity", evalPos).
+    // 4.1 - Rarity substream: stream(draw, "rarity", evalPos).
     const rarityBytes = streamBytes(drawBytes, 'rarity', evalPos);
     const u32r = u32BE(rarityBytes, 0);
     const r = float01(rarityBytes, 0);
 
-    // 4.2 — Fonction de répartition sur les odds, dans l'ordre du snapshot.
+    // 4.2 - Cumulative distribution over the odds, in snapshot order.
     const totalWeight = slot.odds.reduce((s, o) => s + o.weight, 0);
     let running = 0;
     let drawnRarity = slot.odds[slot.odds.length - 1]?.rarity ?? '';
@@ -196,13 +203,17 @@ function explain(proof, snapshots, claimedCards) {
       return { rarity: o.rarity, weight: o.weight, cumulative: running, selected };
     });
 
-    // 4.3 — Anti-malchance, uniquement sur le slot d'index le plus élevé.
+    // 4.3 - Pity, only on the highest-index slot.
     const isPitySlot = slot.index === highestIndex;
     const outcome = applyPity(drawnRarity, pity, isPitySlot, lookup);
     const finalRarity = outcome.rarity;
 
-    // 4.4 — Choix de la carte par échantillonnage avec rejet, sans remise.
-    const poolBefore = [...(remaining[finalRarity] ?? [])];
+    // 4.4 - Tirage de la carte par rejection sampling. La borne de rejet se calcule sur la
+    // taille du pool lu, qui diffère entre les deux versions : c'est ce qui les rend
+    // incompatibles et impose de rejouer une preuve avec sa propre version.
+    const poolBefore = withReplacement
+      ? [...(packRules.pools[finalRarity] ?? [])]
+      : [...(remaining[finalRarity] ?? [])];
     const n = poolBefore.length;
     if (n === 0)
       throw new Error(`pool épuisé pour la rareté « ${finalRarity} » (evalPos ${evalPos})`);
@@ -220,7 +231,7 @@ function explain(proof, snapshots, claimedCards) {
     }
     if (chosenIndex < 0) throw new Error(`échantillonnage sans issue au slot ${slot.index}`);
     const cardId = poolBefore[chosenIndex];
-    remaining[finalRarity].splice(chosenIndex, 1);
+    if (!withReplacement) remaining[finalRarity].splice(chosenIndex, 1);
 
     const claimed = claimedBySlot.get(slot.index) ?? null;
     const ok = claimed !== null && claimed.rarity === finalRarity && claimed.cardId === cardId;
@@ -266,12 +277,12 @@ const mark = (ok) => (ok ? '✓' : '✗');
 function render(steps, proof) {
   const out = [];
   const p = (s = '') => out.push(s);
-  // Numérotation dynamique : l'empreinte du pool n'est vérifiée que si la preuve la porte.
+  // Dynamic numbering: the pool digest is only checked when the proof carries it.
   let stepNo = 0;
   const title = (label) => `ÉTAPE ${++stepNo} — ${label}`;
 
   p('══════════════════════════════════════════════════════════════════');
-  p("  VÉRIFICATION D'UN TIRAGE LEBOOSTER — algo pf-v1");
+  p(`  VÉRIFICATION D'UN TIRAGE LEBOOSTER — algo ${proof.algoVersion ?? 'pf-v1'}`);
   p('══════════════════════════════════════════════════════════════════');
   p();
   p(title("L'engagement pris avant l'ouverture"));
@@ -374,7 +385,7 @@ function render(steps, proof) {
 }
 
 // ---------------------------------------------------------------------------
-// 6. Auto-test sur les vecteurs de référence
+// 6. Self-test on the reference vectors
 // ---------------------------------------------------------------------------
 
 function selfTest() {
@@ -394,7 +405,7 @@ function selfTest() {
     let ok = false;
     let detail = '';
     try {
-      const steps = explain(proof, snapshots, v.expected.cards);
+      const steps = explain({ ...proof, algoVersion: v.algoVersion }, snapshots, v.expected.cards);
       ok = steps.allOk;
       if (!ok) detail = `commit=${steps.commit.ok} draw=${steps.draw.ok} cartes=${steps.mappingOk}`;
     } catch (e) {
@@ -414,10 +425,10 @@ function selfTest() {
 }
 
 // ---------------------------------------------------------------------------
-// 7. Entrée
+// 7. Entry point
 // ---------------------------------------------------------------------------
 
-const USAGE = `Vérificateur de tirage LeBooster (pf-v1)
+const USAGE = `Vérificateur de tirage LeBooster (pf-v1, pf-v2)
 
   node verify-lebooster.mjs <preuve.json>     vérifie une preuve, détail complet
   node verify-lebooster.mjs <preuve.json> --json   même chose, en JSON
@@ -454,15 +465,19 @@ function main(argv) {
     console.error('Fichier incomplet : il faut { proof, snapshots: { packRules, pity }, cards }.');
     return 1;
   }
-  if (payload.algoVersion && payload.algoVersion !== 'pf-v1') {
+  if (payload.algoVersion && !SUPPORTED_ALGO_VERSIONS.includes(payload.algoVersion)) {
     console.error(
-      `Ce vérificateur implémente pf-v1 ; la preuve annonce « ${payload.algoVersion} ».`
+      `Ce vérificateur implémente ${SUPPORTED_ALGO_VERSIONS.join(', ')} ; ` +
+        `la preuve annonce « ${payload.algoVersion} ».`
     );
     return 1;
   }
 
   let steps;
   try {
+    // The version travels with the proof from here on, so the report names the algorithm that
+    // was actually replayed rather than the one this build happens to prefer.
+    proof.algoVersion = payload.algoVersion ?? 'pf-v1';
     steps = explain(proof, snapshots, cards ?? []);
   } catch (e) {
     console.error(`Rejeu impossible : ${e.message}`);
