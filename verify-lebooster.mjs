@@ -316,7 +316,11 @@ function render(steps, proof) {
 
   p();
   p(title('Du tirage aux cartes, slot par slot'));
-  p("  (ordre d'évaluation : slot.index croissant, sans remise)");
+  p(
+    `  (ordre d'évaluation : slot.index croissant, ${
+      (proof.algoVersion ?? 'pf-v1') === 'pf-v2' ? 'avec remise' : 'sans remise'
+    })`
+  );
 
   for (const s of steps.slots) {
     p();
