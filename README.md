@@ -64,9 +64,17 @@ La graine client est une chaîne **opaque**, utilisée telle quelle, jamais ré-
 Les slots sont évalués par **`slot.index` croissant** — c'est l'ordre normatif, distinct de l'ordre
 d'affichage. Pour le slot en position d'évaluation `p` :
 
-1. **Bande de rareté.** `r = float01(stream(draw, "rarity", p))`. Les poids du slot sont normalisés
-   en fonction de répartition cumulée, parcourue **dans l'ordre du snapshot** ; la première bande
-   dont le cumul dépasse `r` est retenue.
+1. **Bande de rareté.** `r = float01(stream(draw, "rarity", p))`. Les poids **de ce slot** sont
+   normalisés en fonction de répartition cumulée, parcourue **dans l'ordre du snapshot** ; la
+   première bande dont le cumul dépasse `r` est retenue.
+
+   Les slots n'ont pas forcément la même table. Un pack peut déclarer un **slot garanti** : le slot
+   d'index le plus élevé porte alors sa propre distribution, qui exclut le palier de base, et les
+   autres gardent la table commune. Le programme n'a rien de particulier à faire, il lit
+   `slot.odds` slot par slot ; c'est en lisant une preuve à la main qu'il faut le savoir, sans quoi
+   la dernière carte paraît tirée hors de sa table. Les vecteurs `guaranteed-slot` et
+   `guaranteed-slot-pity-counts` de `kat.json` couvrent ce cas.
+
 2. **Anti-malchance.** Évaluée une seule fois par ouverture, sur le slot d'index le plus élevé. Si la
    bande tirée atteint déjà le rang garanti, le compteur repart à zéro sans rien forcer. Sinon, si
    `compteur + 1 ≥ seuil`, la bande garantie est forcée. Sinon le compteur avance d'un cran. Elle ne
